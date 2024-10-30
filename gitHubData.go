@@ -7,15 +7,15 @@ import (
 	"github.com/Scalingo/go-utils/logger"
 )
 type DecoderSearchResult struct {
-	totalCount int                      `json:"total_count"`
-	incompleteResults	bool			`json:"incomplete_results"`
-	items      []json.RawMessage		`json:"items"`
+	TotalCount int                      `json:"total_count"`
+	IncompleteResults	bool			`json:"incomplete_results"`
+	Items      []json.RawMessage		`json:"items"`
 }
 
 type SearchResult struct {
-	totalCount int                      `json:"total_count"`
-	incompleteResults	bool			`json:"incomplete_results"`
-	items      []map[string]interface{} `json:"items"`
+	TotalCount int                      `json:"total_count"`
+	IncompleteResults	bool			`json:"incomplete_results"`
+	Items      []map[string]interface{} `json:"items"`
 }
 
 func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
@@ -23,7 +23,7 @@ func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[s
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	err := json.NewEncoder(w).Encode(data.items)
+	err := json.NewEncoder(w).Encode(data.Items)
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
 	}
@@ -34,7 +34,7 @@ func (data *SearchResult) filterResults(filters map[string]interface{}) []map[st
 	var filteredArray []map[string]interface{}
 
 	// Parcours de chaque élément dans le tableau source
-	for _, element := range data.items {
+	for _, element := range data.Items {
 		matches := true
 
 		// Vérification de chaque critère
@@ -60,7 +60,7 @@ func (data *SearchResult) getFiltered(w http.ResponseWriter, r *http.Request, fi
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	err := json.NewEncoder(w).Encode(data.items)
+	err := json.NewEncoder(w).Encode(data.Items)
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
 	}
