@@ -1,9 +1,4 @@
-# Canvas for Backend Technical Test at Scalingo
-
-## Instructions
-
-* From this canvas, respond to the project which has been communicated to you by our team
-* Feel free to change everything
+# Response to scalingo
 
 ## Execution
 
@@ -12,10 +7,28 @@ docker compose up
 ```
 
 Application will be then running on port `5000`
+you can then send request to access the data stored
 
 ## Test
 
+heartbeat function
 ```
 $ curl localhost:5000/ping
 { "status": "pong" }
+```
+
+Get for everything
+```
+$ curl localhost:5000/getAll
+{ ...
+"way too long"
+... }
+```
+
+Get to get only some element
+```
+$ curl localhost:5000/getFiltered
+{ ...
+"still way too long "
+... }
 ```
