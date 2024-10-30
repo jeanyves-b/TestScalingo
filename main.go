@@ -18,17 +18,19 @@ func main() {
 		log.WithError(err).Error("Fail to initialize configuration")
 		os.Exit(1)
 	}
-
-	log.Info("Initializing routes")
-	router := handlers.NewRouter(log)
-	router.HandleFunc("/ping", pongHandler)
 	// Initialize web server and configure the following routes:
 	// GET /repos
 	client := newGitHubClient()
-
+	
 	// Lancer la requète vers github pour peupler la structure de données
 	go client.getLastPublicGithubRepositories()
-
+	
+	log.Info("Initializing routes")
+	router := handlers.NewRouter(log)
+	router.HandleFunc("/ping", pongHandler)
+	router.HandleFunc("/getAll", client.response.getAll)
+	router.HandleFunc("/getFiltered", client.response.getFiltered)
+	
 	log = log.WithField("port", cfg.Port)
 	log.Info("Listening...")
 	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)

@@ -1,8 +1,33 @@
 package main
 
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/Scalingo/go-utils/logger"
+)
+type DecoderSearchResult struct {
+	totalCount int                      `json:"total_count"`
+	incompleteResults	bool			`json:"incomplete_results"`
+	items      []json.RawMessage		`json:"items"`
+}
+
 type SearchResult struct {
-	TotalCount int                      `json:"total_count"`
+	totalCount int                      `json:"total_count"`
+	incompleteResults	bool			`json:"incomplete_results"`
 	items      []map[string]interface{} `json:"items"`
+}
+
+func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+	log := logger.Get(r.Context())
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	err := json.NewEncoder(w).Encode(data.items)
+	if err != nil {
+		log.WithError(err).Error("Fail to encode JSON")
+	}
+	return nil
 }
 
 func (data *SearchResult) filterResults(filters map[string]interface{}) []map[string]interface{} {
@@ -28,4 +53,16 @@ func (data *SearchResult) filterResults(filters map[string]interface{}) []map[st
 	}
 
 	return filteredArray
+}
+
+func (data *SearchResult) getFiltered(w http.ResponseWriter, r *http.Request, filters map[string]string) error {
+	log := logger.Get(r.Context())
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	err := json.NewEncoder(w).Encode(data.items)
+	if err != nil {
+		log.WithError(err).Error("Fail to encode JSON")
+	}
+	return nil
 }
