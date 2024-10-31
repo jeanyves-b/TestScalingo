@@ -6,28 +6,23 @@ import (
 	"net/url"
 	"io/ioutil"
 	"sync"
+	"time"
 
 	"github.com/Scalingo/go-utils/logger"
 )
 
 // Structure de requète réutilisable
 type GitHubClient struct {
-	httpClient *http.Client
-	response   SearchResult
+	httpClient	*http.Client
+	request		*http.Request
+	response	SearchResult
+	timer		*time.Ticker
 }
 
 // Fonction pour créer un nouveau client GitHub
-func newGitHubClient() *GitHubClient {
-	return &GitHubClient{
-		httpClient: &http.Client{},
-	}
-}
-
-// Fonction pour faire une requête à l'API GitHub
-func (client *GitHubClient) getLastPublicGithubRepositories() error {
-	//initialisation du loggeur
+func newGitHubClient() (*GitHubClient, error) {
+	timer := time.NewTicker(10*time.Second)
 	log := logger.Default()
-
 	gitHubUrl := "https://api.github.com/search/repositories?q=is:public"
 
 	// Ajout les paramètres de requête
@@ -42,15 +37,28 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 	log.Info("created request : "+urlWithParams)
 	if err != nil {
 		log.WithError(err).Error("Failed to create request")
-		return err
+		return nil, err
 	}
 
 	// Ajouter les en-têtes
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
+	return &GitHubClient{
+		httpClient: &http.Client{},
+		request: req,
+		timer: timer,
+	}, nil
+}
+
+// Fonction pour faire une requête à l'API GitHub
+func (client *GitHubClient) getLastPublicGithubRepositories() error {
+	//initialisation du loggeur
+	log := logger.Default()
+	defer client.timer.Reset(10*time.Second)
+
 	// Envoyer la requête
-	resp, err := client.httpClient.Do(req)
+	resp, err := client.httpClient.Do(client.request)
 	if err != nil {
 		log.WithError(err).Error("Fail send request", "message: ", resp)
 		return err
@@ -102,7 +110,7 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 		}(raw)
 	}
 
-	// Fermer le channel après que toutes les goroutines ont terminé
+	// Fermer le channel après que toutes les goroutines aient terminées
 	go func() {
 		wg.Wait()
 		close(results)
@@ -110,6 +118,10 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 	}()
 
 	// Collecter et afficher les résultats
+	client.response.writer.Wait()
+	client.response.writer.Add(1)
+	defer client.response.writer.Done()
+	client.response.reader.Wait()
 	var itemList []map[string]interface{}
 	for item := range results {
 		itemList = append(itemList, item)
@@ -117,5 +129,51 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 	client.response.Items = itemList
 	log.Info("List filled")
 
+	return nil
+}
+
+func (client *GitHubClient) getAllUpdated(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+	log := logger.Get(r.Context())
+	client.getLastPublicGithubRepositories()
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	client.response.writer.Wait()
+	client.response.reader.Add(1)
+	defer client.response.reader.Done()
+	err := json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK", "Items": client.response})
+	if err != nil {
+		log.WithError(err).Error("Fail to encode JSON")
+	}
+	return nil
+}
+
+func (client *GitHubClient) getFilteredUpdated(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+	log := logger.Get(r.Context())
+	client.getLastPublicGithubRepositories()
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	value, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		log.WithError(err).Error("Error parsing request")
+		err = json.NewEncoder(w).Encode(map[string]string{"status": "ERROR"})
+		if err != nil {
+			log.WithError(err).Error("Fail to encode JSON")
+		}
+		return err
+	}
+	
+	log.Info("filtering with those filters: ", value)
+	
+	client.response.writer.Wait()
+	client.response.reader.Add(1)
+	defer client.response.reader.Done()
+	err = json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK","Items": client.response.filterResults(value)})
+	if err != nil {
+		log.WithError(err).Error("Fail to encode JSON")
+	}
 	return nil
 }

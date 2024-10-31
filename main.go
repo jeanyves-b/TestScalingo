@@ -20,16 +20,30 @@ func main() {
 	}
 	// Initialize web server and configure the following routes:
 	// GET /repos
-	client := newGitHubClient()
+	client, err := newGitHubClient()
+	if err != nil {
+		log.WithError(err).Error("Fail to create http request")
+		os.Exit(1)
+	}
+
 	
-	// Lancer la requète vers github pour peupler la structure de données
-	go client.getLastPublicGithubRepositories()
+	// Lancer la thread qui va emettre des requète toutes les 5 secondes de façon à peupler puis mettre à jour la structure de données
+	go func(client *GitHubClient) { 
+		for {
+			select {
+				case <- client.timer.C:
+					client.getLastPublicGithubRepositories()
+			}
+		}
+	}(client)
 	
 	log.Info("Initializing routes")
 	router := handlers.NewRouter(log)
 	router.HandleFunc("/ping", pongHandler)
 	router.HandleFunc("/getAll", client.response.getAll)
 	router.HandleFunc("/getFiltered", client.response.getFiltered)
+	router.HandleFunc("/getAllUpdated", client.getAllUpdated)
+	router.HandleFunc("/getFilteredUpdated", client.getFilteredUpdated)
 
 	//méthodes de test
 	router.HandleFunc("/PrintFirst", client.printFirst)

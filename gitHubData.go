@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
+	"sync"
 
 	"github.com/Scalingo/go-utils/logger"
 )
@@ -19,6 +20,8 @@ type SearchResult struct {
 	TotalCount int                      `json:"total_count"`
 	IncompleteResults	bool			`json:"incomplete_results"`
 	Items      []map[string]interface{} `json:"items"`
+	reader		sync.WaitGroup
+	writer		sync.WaitGroup
 }
 
 func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
@@ -26,6 +29,9 @@ func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[s
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
+	data.writer.Wait()
+	data.reader.Add(1)
+	defer data.reader.Done()
 	err := json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK", "Items": data.Items})
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
@@ -91,9 +97,11 @@ func (data *SearchResult) getFiltered(w http.ResponseWriter, r *http.Request, _ 
 		}
 		return err
 	}
-
 	log.Info("filtering with those filters: ", value)
 
+	data.writer.Wait()
+	data.reader.Add(1)
+	defer data.reader.Done()
 	err = json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK","Items": data.filterResults(value)})
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
