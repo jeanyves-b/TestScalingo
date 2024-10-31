@@ -26,7 +26,7 @@ func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[s
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	err := json.NewEncoder(w).Encode(data.Items)
+	err := json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK", "Items": data.Items})
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
 	}
@@ -37,18 +37,14 @@ func isType(a, b interface{}) bool {
     return reflect.TypeOf(a) == reflect.TypeOf(b)
 }
 func contains(element interface{}, value string) bool {
-	logger.Default().Info("comparing : ", element, " and ", value)
 	if isType(element, value){
-		logger.Default().Info(element.(string) == value)
 		return element.(string) == value
 	}
 	valueInt, err := strconv.Atoi(value)
 	if err == nil && isType(element, valueInt) {
 
-		logger.Default().Info(element == valueInt)
 		return element == valueInt
 	}
-	logger.Default().Info("false")
 	return false
 }
 
@@ -89,11 +85,16 @@ func (data *SearchResult) getFiltered(w http.ResponseWriter, r *http.Request, _ 
 	value, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		log.WithError(err).Error("Error parsing request")
+		err = json.NewEncoder(w).Encode(map[string]string{"status": "ERROR"})
+		if err != nil {
+			log.WithError(err).Error("Fail to encode JSON")
+		}
+		return err
 	}
 
 	log.Info("filtering with those filters: ", value)
 
-	err = json.NewEncoder(w).Encode(data.filterResults(value))
+	err = json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK","Items": data.filterResults(value)})
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
 	}
