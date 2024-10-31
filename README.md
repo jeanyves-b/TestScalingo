@@ -64,7 +64,9 @@ $ curl localhost:5000/getFilteredUpdated
 
 ### Test scripts
 
-stresstest.sh : a small stresstest that launches the docker and try to launch as many request as it cansend to the server in 20 seconds and print the result at the end of the script.
+stressTest.sh : a small stresstest that launches the docker and try to launch as many request /getFiltered?language=Java as it can send to the server in 20 seconds and print the result at the end of the script.
+
+stressTestHeavy.sh : same as stressTest.sh but with a call to /getAllUpdated
 
 ## Architectural descisions
 
