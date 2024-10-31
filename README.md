@@ -49,8 +49,6 @@ To force an update of the list and get everything, you can use /getAllUpdated
 ```bash
 $ curl localhost:5000/getAllUpdated
 { "status": "OK/ERROR" ,
-...
-"way too long"
 ... }
 ```
 
@@ -61,9 +59,7 @@ To force an update of the list and get only some element, you can use /getFilter
 ```bash
 $ curl localhost:5000/getFilteredUpdated
 { "status": "OK/ERROR" ,
-...
-"still way too long "
-... }
+...}
 ```
 
 ### Test scripts
