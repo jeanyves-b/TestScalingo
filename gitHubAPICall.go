@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
-	"io/ioutil"
 	"sync"
 
 	"github.com/Scalingo/go-utils/logger"
@@ -39,7 +39,7 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 	// construction de la requete
 	urlWithParams := gitHubUrl + "&" + params.Encode()
 	req, err := http.NewRequest(http.MethodGet, urlWithParams, nil)
-	log.Info("created request : "+urlWithParams)
+	log.Info("Asking github api : " + urlWithParams)
 	if err != nil {
 		log.WithError(err).Error("Failed to create request")
 		return err
@@ -55,7 +55,6 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 		log.WithError(err).Error("Fail send request", "message: ", resp)
 		return err
 	}
-	log.Info("request sent")
 	defer resp.Body.Close()
 
 	// Vérifier le statut de la réponse
@@ -63,11 +62,14 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 		log.WithError(err).Error("Response not OK", "message: ", resp)
 		return err
 	}
-	log.Info("response OK")
-	
+
 	// Lire et décoder la réponse JSON
 	var rawMessages DecoderSearchResult
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Error("Error while reading the response")
+		return err
+	}
 	err = json.Unmarshal(body, &rawMessages)
 	if err != nil {
 		log.WithError(err).Error("Fail to parse JSON")
