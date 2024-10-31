@@ -6,7 +6,7 @@
 docker compose up
 ```
 
-Application will be then running on port `5000`
+Application will be then running on port `5000`.
 you can then send request to access the data stored
 
 ## Test
