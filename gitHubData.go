@@ -30,7 +30,8 @@ func (data *SearchResult) getAll(w http.ResponseWriter, r *http.Request, _ map[s
 	return nil
 }
 
-func (data *SearchResult) filterResults(filters map[string]interface{}) []map[string]interface{} {
+func (data *SearchResult) filterResults(filters map[string]string) []map[string]interface{} {
+	log := logger.Get(r.Context())
 	var filteredArray []map[string]interface{}
 
 	// Parcours de chaque élément dans le tableau source
@@ -42,6 +43,7 @@ func (data *SearchResult) filterResults(filters map[string]interface{}) []map[st
 			// Si la clé existe et que la valeur correspond dans l'élément
 			if value, ok := element[criteriakey]; !ok || value != criteriaValue {
 				matches = false
+				log.Info("Filtered List : filtered element")
 				break
 			}
 		}
@@ -49,6 +51,7 @@ func (data *SearchResult) filterResults(filters map[string]interface{}) []map[st
 		// Si tous les critères correspondent, ajout de l'élément au tableau filtré
 		if matches {
 			filteredArray = append(filteredArray, element)
+			log.Info("Filtered List : added element")
 		}
 	}
 
@@ -59,8 +62,9 @@ func (data *SearchResult) getFiltered(w http.ResponseWriter, r *http.Request, fi
 	log := logger.Get(r.Context())
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	log.Info("filtering with those filters: ", filters)
 
-	err := json.NewEncoder(w).Encode(data.Items)
+	err := json.NewEncoder(w).Encode(data.filterResults(filters))
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
 	}
