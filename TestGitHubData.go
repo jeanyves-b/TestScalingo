@@ -1,11 +1,13 @@
+// File TestGitHubData.go
+// A file used for small test utilities
 package main
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/sirupsen/logrus"
 	"github.com/Scalingo/go-utils/logger"
+	"github.com/sirupsen/logrus"
 )
 
 func displayData(data map[string]interface{}, log logrus.FieldLogger) {
