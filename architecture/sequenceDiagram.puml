@@ -45,9 +45,54 @@ SearchResult --> HTTPServer: Error
 HTTPServer --> User: Response {"status": "ERROR"}
 
 == Method getFiltered ==
-User -> HTTPServer: GET /getFiltered?criteria
+User -> HTTPServer: GET /getFiltered?criterias
 HTTPServer -> SearchResult: getFiltered()
-SearchResult -> SearchResult: filterResults(criteria)
+SearchResult -> SearchResult: filterResults(criterias)
+SearchResult --> HTTPServer: Response with filtered items
+HTTPServer --> User: Response {"status": "OK", "Items": ...} 
+SearchResult --> HTTPServer: Error
+HTTPServer --> User: Response {"status": "ERROR"}
+
+== Method getAllUpdated ==
+User -> HTTPServer: GET /getAllUpdated
+
+HTTPServer -> GitHubClient: getLastPublicGithubRepositories()
+GitHubClient -> GitHubAPI: Send request for 100 last github repos
+GitHubAPI --> GitHubClient: Response
+GitHubClient -> DecoderSearchResult: Parse JSON to DecoderSearchResult
+activate DecoderSearchResult
+loop For each raw JSON in DecoderSearchResult
+    DecoderSearchResult -> SearchResult: Parse JSON Item to map[string]interface{}
+    SearchResult --> SearchResult: Store parsed item
+end
+deactivate DecoderSearchResult
+deactivate GitHubClient
+deactivate DecoderSearchResult
+
+HTTPServer -> SearchResult: getAllUpdated()
+SearchResult --> HTTPServer: Response with all items
+HTTPServer --> User: Response {"status": "OK", "Items": ...} 
+SearchResult --> HTTPServer: Error
+HTTPServer --> User: Response {"status": "ERROR"}
+
+== Method getFilteredUpdated ==
+User -> HTTPServer: GET /getFilteredUpdated?criterias
+
+HTTPServer -> GitHubClient: getLastPublicGithubRepositories()
+GitHubClient -> GitHubAPI: Send request for 100 last github repos
+GitHubAPI --> GitHubClient: Response
+GitHubClient -> DecoderSearchResult: Parse JSON to DecoderSearchResult
+activate DecoderSearchResult
+loop For each raw JSON in DecoderSearchResult
+    DecoderSearchResult -> SearchResult: Parse JSON Item to map[string]interface{}
+    SearchResult --> SearchResult: Store parsed item
+end
+deactivate DecoderSearchResult
+deactivate GitHubClient
+deactivate DecoderSearchResult
+
+HTTPServer -> SearchResult: getFiltered()
+SearchResult -> SearchResult: filterResults(criterias)
 SearchResult --> HTTPServer: Response with filtered items
 HTTPServer --> User: Response {"status": "OK", "Items": ...} 
 SearchResult --> HTTPServer: Error

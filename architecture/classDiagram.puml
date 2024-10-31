@@ -1,24 +1,32 @@
 @startuml
 package main {
     class GitHubClient {
-        - httpClient: *http.Client
-        - response: SearchResult
+        - httpClient: 	*http.Client
+        - response: 	SearchResult
+		- request:		*http.Request
+		- timer:		*time.Ticker
+
         + getLastPublicGithubRepositories() error
+		+ getAllUpdated(w http.ResponseWriter, r *http.Request, _ map[string]string) error
+		+ getFilteredUpdated(w http.ResponseWriter, r *http.Request, _ map[string]string) error
     }
 
     class SearchResult {
-        + TotalCount: int
-        + IncompleteResults: bool
-        + Items: []map[string]interface{}
+        - TotalCount: 			int
+        - IncompleteResults: 	bool
+        - Items: 				[]map[string]interface{}
+		- reader				sync.WaitGroup
+		- writer				sync.WaitGroup
+
         + getAll(http.ResponseWriter, *http.Request, map[string]string) error
         + getFiltered(http.ResponseWriter, *http.Request, map[string]string) error
         + filterResults(url.Values) []map[string]interface{}
     }
 
     class DecoderSearchResult {
-        + TotalCount: int
-        + IncompleteResults: bool
-        + Items: []json.RawMessage
+        - TotalCount: 			int
+        - IncompleteResults:	bool
+        - Items: 				[]json.RawMessage
     }
 
 	main --> GitHubClient
