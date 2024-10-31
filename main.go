@@ -30,6 +30,9 @@ func main() {
 	router.HandleFunc("/ping", pongHandler)
 	router.HandleFunc("/getAll", client.response.getAll)
 	router.HandleFunc("/getFiltered", client.response.getFiltered)
+
+	//méthodes de test
+	router.HandleFunc("/PrintFirst", client.printFirst)
 	
 	log = log.WithField("port", cfg.Port)
 	log.Info("Listening...")

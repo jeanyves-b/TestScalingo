@@ -64,16 +64,6 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 		return err
 	}
 	log.Info("response OK")
-
-	/* easy method
-	body, err := ioutil.ReadAll(resp.Body)
-	err = json.Unmarshal(body, &client.response)
-	if err != nil {
-		log.WithError(err).Error("Fail to parse JSON")
-		return err
-	}
-	log.Info("JSON parsed")
-	*/
 	
 	// Lire et décoder la réponse JSON
 	var rawMessages DecoderSearchResult
