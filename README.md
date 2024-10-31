@@ -74,11 +74,9 @@ You can find the architecture documents in the architecture folder of this repo
 
 As mentioned on the documentation in order to optimise performances, we can create a server that will be reused for every call we make to the same API. This is covered with the struct GitHubClient wich contains a http client, the url to call for the API and the last response given.
 
-The API i called every 10 seconds to update the stored data or the update can be forced with a call to /getFilteredUpdated or /getAllUpdated. (The value of 10s is arbitrary and can be changed in gitHubAPICall.go line 24)
-
 ### Storing the github informations
 
-In order to avoid making a DDOS on the github API we store the received data and update it regularily.
+In order to avoid making a DDOS on the github API we store the received data and update it every 10 seconds or at every call to /getFilteredUpdated or /getAllUpdated. (The value of 10s is arbitrary and can be changed in gitHubAPICall.go line 24)
 
 #### Storing the informations as a map of [string]interface{}
 
