@@ -25,10 +25,15 @@ $ curl localhost:5000/getAll
 ... }
 ```
 
-Get to get only some element -- work in progress
+Get to get only some element
 ```
 $ curl localhost:5000/getFiltered
 { ...
 "still way too long "
 ... }
 ```
+
+## What is still missing
+
+1- An automated test base
+2- Adapt the logger to give more context

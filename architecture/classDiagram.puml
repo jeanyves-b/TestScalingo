@@ -1,0 +1,33 @@
+@startuml
+package main {
+    class GitHubClient {
+        - httpClient: *http.Client
+        - response: SearchResult
+        + getLastPublicGithubRepositories() error
+    }
+
+    class SearchResult {
+        + TotalCount: int
+        + IncompleteResults: bool
+        + Items: []map[string]interface{}
+        + getAll(http.ResponseWriter, *http.Request, map[string]string) error
+        + getFiltered(http.ResponseWriter, *http.Request, map[string]string) error
+        + filterResults(url.Values) []map[string]interface{}
+    }
+
+    class DecoderSearchResult {
+        + TotalCount: int
+        + IncompleteResults: bool
+        + Items: []json.RawMessage
+    }
+
+	main --> GitHubClient
+    GitHubClient --> SearchResult
+    GitHubClient --> DecoderSearchResult
+
+    class main {
+        + main()
+        + pongHandler(http.ResponseWriter, *http.Request, map[string]string) error
+    }
+}
+@enduml
