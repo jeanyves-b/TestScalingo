@@ -120,10 +120,8 @@ func (client *GitHubClient) getLastPublicGithubRepositories() error {
 	}()
 
 	// Collecter et afficher les résultats
-	client.response.writer.Wait()
-	client.response.writer.Add(1)
-	defer client.response.writer.Done()
-	client.response.reader.Wait()
+	client.response.rwmutex.Lock()
+	defer client.response.rwmutex.Unlock()
 	var itemList []map[string]interface{}
 	for item := range results {
 		itemList = append(itemList, item)
@@ -141,9 +139,8 @@ func (client *GitHubClient) getAllUpdated(w http.ResponseWriter, r *http.Request
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	client.response.writer.Wait()
-	client.response.reader.Add(1)
-	defer client.response.reader.Done()
+	client.response.rwmutex.RLock()
+	defer client.response.rwmutex.RUnlock()
 	err := json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK", "Items": client.response})
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
@@ -170,9 +167,8 @@ func (client *GitHubClient) getFilteredUpdated(w http.ResponseWriter, r *http.Re
 	
 	log.Info("filtering with those filters: ", value)
 	
-	client.response.writer.Wait()
-	client.response.reader.Add(1)
-	defer client.response.reader.Done()
+	client.response.rwmutex.RLock()
+	defer client.response.rwmutex.RUnlock()
 	err = json.NewEncoder(w).Encode(map[string]interface{}{"status": "OK","Items": client.response.filterResults(value)})
 	if err != nil {
 		log.WithError(err).Error("Fail to encode JSON")
