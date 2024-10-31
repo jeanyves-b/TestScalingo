@@ -29,6 +29,7 @@ func main() {
 	
 	// Lancer la thread qui va emettre des requète toutes les 5 secondes de façon à peupler puis mettre à jour la structure de données
 	go func(client *GitHubClient) { 
+		client.getLastPublicGithubRepositories()
 		for {
 			select {
 				case <- client.timer.C:
