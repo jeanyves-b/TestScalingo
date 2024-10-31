@@ -25,7 +25,7 @@ $ curl localhost:5000/getAll
 ... }
 ```
 
-Get to get only some element
+Get to get only some element -- work in progress
 ```
 $ curl localhost:5000/getFiltered
 { ...
